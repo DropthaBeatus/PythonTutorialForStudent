@@ -1,0 +1,171 @@
+import random
+import copy
+
+#Made this program in under 3 hours so its a bit janky
+#This code contains alot of OOP (Object Orientatied Programming Practices)
+
+#This program will cover the next 2-5 weeks of practice
+
+#We will go over: OOP, Functional programming, how to read this code, make it more readable, how to use github properly, what is github and what is a code repository
+
+#TODO: Reading material
+
+#Object Oriented Programming (Optional)
+#https://realpython.com/python3-object-oriented-programming/
+
+#Classes (Optional)
+#https://docs.python.org/3/tutorial/classes.html
+
+#Github Intro
+#https://product.hubspot.com/blog/git-and-github-tutorial-for-beginners
+
+#TODO: Practices
+#Either:
+#   make your current black jack code,
+#   give me suggestions for what functionality I'm missing here
+#   Program with me to make this program more robust
+#   Debugging practice: I'll make this code non functional. Find the error
+#   create repo, push and commit code.
+
+class Card:
+    value = 0
+    suite = ""
+    cardName = ""
+
+    def __init__(self, value, suite, cardName):
+        self.value = value
+        self.suite = suite
+        self.cardName = cardName
+
+
+class Deck:
+    cards = []
+    suits = ["Spades", "Clubs", "Hearts", "Diamonds"]
+    cardNames = ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King"]
+
+    def __init__(self):
+        for n in range(52):
+            self.cards.append(Card(n % 13 + 1, self.suits[n % 4], self.cardNames[n % 13]))
+
+    def printCards(self):
+        for n in self.cards:
+            print(n.cardName + " of " + n.suite)
+
+    def shuffleDeck(self):
+        random.shuffle(self.cards)
+
+    def drawCard(self):
+
+        #will dicuss why I copied
+        element = random.randint(0, len(self.cards)-1)
+        drawed = copy.deepcopy(self.cards[element])
+
+        self.cards.pop(element)
+        return drawed
+
+
+
+class Player:
+    points = 0
+    name = 0
+    betAmount = 0
+    hand = []
+    count = 0
+
+    def __init__(self, name):
+        self.points = 100
+        self.name = name
+
+    def bet(self, betted):
+        if betted > self.points:
+            print("You betted {} points. You only have {} points. Bet a lower amount before you have to sell your car, kids, and soul", betted, self.points)
+        else:
+            self.points -= betted
+            self.betAmount = betted
+
+    def win(self):
+        self.points += self.betAmount + (self.betAmount * 1.5)
+
+    def newHand(self, cards):
+        self.count = 0
+        self.hand = []
+        self.bet(10)
+        #TODO: make a check for black jack
+        #TODO: make permiations for Aces
+        for card in cards:
+            self.count = self.count + card.value
+        self.hand = cards
+
+    def __repr__(self):
+        return repr((self.count, self.name))
+
+class BlackJack:
+    deck = Deck()
+    players = []
+    winningOrder = []
+    topAmount = 0
+    playeramount = 2
+
+    def __init__(self):
+        #self.playeramount = playeramount
+
+        x = 0
+        while x < self.playeramount:
+            self.players.append(Player(x))
+            x += 1
+
+
+    def drawCards(self):
+        self.topAmount = 0
+        self.checkCardCount(self.playeramount * 2)
+        for n in range(self.playeramount):
+            self.hand = []
+            self.hand.append(self.deck.drawCard())
+            self.hand.append(self.deck.drawCard())
+            self.players[n].newHand(self.hand)
+
+        #TODO remove this later
+        self.compareCards()
+
+    def compareCards(self):
+        self.winningOrder = []
+        self.winningOrder = copy.deepcopy(self.players)
+        sorted(self.winningOrder, key=lambda player: player.count)
+
+        for n in range(len(self.winningOrder)-1, -1, -1):
+            if self.winningOrder[n].count > 21:
+                self.winningOrder.pop(n)
+            elif self.winningOrder[n].count > self.topAmount:
+                self.topAmount = self.winningOrder[n].count
+            elif self.winningOrder[n].count < self.topAmount:
+                self.winningOrder.pop(n)
+
+        if len(self.winningOrder) == 1:
+            index = self.winningOrder[0].name
+            self.players[index].win()
+            print("Player {0} wins with {1} and now has a point total of {2}".format(self.players[index].name, self.players[index].count,  self.players[index].points))
+        else:
+            tiestring = ""
+            for player in self.winningOrder:
+                tiestring = tiestring + str(player.name) + " "
+
+            print("Players: " + tiestring + " .... All tie!")
+            #TODO give back players their money
+        print("Cards left {}".format(len(self.deck.cards)))
+
+
+    def checkCardCount(self, drawn):
+        if len(self.deck.cards) <= drawn:
+            tmpdeck = self.deck.cards
+            self.deck = Deck()
+            for card in tmpdeck:
+                self.deck.cards.append(card)
+
+
+
+blackjack = BlackJack()
+
+blackjack.drawCards()
+blackjack.drawCards()
+blackjack.drawCards()
+blackjack.drawCards()
